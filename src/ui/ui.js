@@ -142,6 +142,7 @@ export class UI {
     }
     $('#fleet-editor').classList.toggle('locked', locked);
     $$('#fleet-editor button').forEach((b) => { b.disabled = locked; });
+    $('#btn-reset-rules').disabled = locked;
   }
 
   setHostCode(code, link) {
@@ -228,6 +229,14 @@ export class UI {
     $('#btn-launch').addEventListener('click', () => {
       sfx('uiHeavy');
       this.cb.onLaunch?.();
+    });
+
+    $('#btn-reset-rules').addEventListener('click', () => {
+      if (this.rulesLocked) { sfx('uiError'); return; }
+      sfx('uiHeavy');
+      this.setConfig(defaultConfig());
+      this._pushConfig();
+      this.setLobbyStatus('RULES RESTORED TO STANDARD', '');
     });
   }
 

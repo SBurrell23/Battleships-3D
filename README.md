@@ -29,7 +29,7 @@ friend over peer-to-peer WebRTC. No accounts, no server, no build step.
 - Single combat vs. A.I. at three difficulties
 - Two-player peer-to-peer over a short battle code or an invite link
 - Lobby rules: grid size, fleet composition, turn timer, extra-shot-on-hit,
-  whether hulls may touch
+  whether hulls may touch, and a one-press restore to the standard rules
 - Six fleet colours, which tint your hulls, your boom, your grid and your ensign
 - The after-action report stows away on a button so you can fly over the
   wreckage and read the final board before rematching
