@@ -100,6 +100,14 @@ const P = {
             <path d="M5.4 13.6l3.4-4 2.6 2.8 3-4.2 4.2 5.4z" fill="currentColor"/>`,
 
   hand: `<path d="M9 11V4.8a1.5 1.5 0 0 1 3 0V11M12 11V3.6a1.5 1.5 0 0 1 3 0V11M15 11.4V6a1.5 1.5 0 0 1 3 0v8.4c0 3.9-2.7 6.8-6.4 6.8-2.4 0-4-1-5.2-2.8L4 14.6a1.6 1.6 0 0 1 2.5-2l2.5 2.6V11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+
+  /* stow the panel away downward */
+  minimize: `<path d="M6.8 8.4L12 13.6l5.2-5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+             <path d="M5.2 18.2h13.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+
+  /* bring it back up */
+  expand: `<path d="M6.8 15.6L12 10.4l5.2 5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M5.2 5.8h13.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
 };
 
 const VIEWBOX = '0 0 24 24';

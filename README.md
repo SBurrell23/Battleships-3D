@@ -31,6 +31,8 @@ friend over peer-to-peer WebRTC. No accounts, no server, no build step.
 - Lobby rules: grid size, fleet composition, turn timer, extra-shot-on-hit,
   whether hulls may touch
 - Six fleet colours, which tint your hulls, your boom, your grid and your ensign
+- The after-action report stows away on a button so you can fly over the
+  wreckage and read the final board before rematching
 - The camera is yours at all times: free flight with orbit, pan and zoom, and
   four one-press framings (overview, your waters, enemy waters, free). Nothing
   ever repositions it for you mid-match

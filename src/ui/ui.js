@@ -82,6 +82,7 @@ export class UI {
     for (const id of ['title', 'lobby', 'over']) {
       $(`#screen-${id}`).hidden = (id !== name);
     }
+    if (name !== 'over') this.setResultStowed(false);
   }
 
   showHud(name) {
@@ -447,6 +448,8 @@ export class UI {
       b.addEventListener('click', () => { sfx('uiClick'); this.cb.onCam?.(b.dataset.cam); });
     });
     $('#btn-rematch').addEventListener('click', () => { sfx('uiHeavy'); this.cb.onRematch?.(); });
+    $('#btn-minimize-result').addEventListener('click', () => { sfx('uiBack'); this.setResultStowed(true); });
+    $('#btn-restore-result').addEventListener('click', () => { sfx('uiHeavy'); this.setResultStowed(false); });
   }
 
   setCamMode(mode) {
@@ -584,11 +587,22 @@ export class UI {
     $('#result-wait').hidden = true;
     $('#btn-rematch').disabled = false;
     this.showScreen('over');
+    this.setResultStowed(false);
   }
+
+  /** Tuck the after-action report away so the board can be inspected. */
+  setResultStowed(on) {
+    $('#screen-over').classList.toggle('minimized', on);
+    $('#btn-restore-result').hidden = !on;
+  }
+
+  get resultStowed() { return $('#screen-over').classList.contains('minimized'); }
 
   setRematchWaiting(on) {
     $('#result-wait').hidden = !on;
     $('#btn-rematch').disabled = on;
+    // An opponent accepting a rematch should not be missed behind a stowed panel.
+    if (on) this.setResultStowed(false);
   }
 
   /* =====================================================

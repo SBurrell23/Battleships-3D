@@ -589,6 +589,27 @@ input[type=range]::-moz-range-thumb{
 .result-actions .steel-btn > span{flex:none}
 .result-wait{font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;color:var(--warn);margin-top:10px;animation:pulse 1.4s infinite}
 
+.stow-btn{width:100%;justify-content:center;margin-bottom:10px}
+.stow-btn > span{flex:none}
+
+/* Stowed: the panel gets out of the way and the whole screen stops eating
+   pointer events, so the camera can be flown over the wreckage. */
+#screen-over.minimized{pointer-events:none}
+#screen-over.minimized .result-panel{display:none}
+.restore-chip{
+  position:fixed;left:50%;bottom:84px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:9px;padding:9px 20px;cursor:pointer;
+  pointer-events:auto;
+  font-family:var(--f-ui);font-weight:700;font-size:13px;letter-spacing:.2em;color:#f0dfae;
+  border-color:rgba(201,162,39,.5);
+  clip-path:polygon(11px 0,calc(100% - 11px) 0,100% 100%,0 100%);
+  animation:toast-in .3s cubic-bezier(.2,1.5,.4,1);
+}
+.restore-chip::before,.restore-chip::after{display:none}
+.restore-chip i{font-size:16px;color:var(--brass)}
+.restore-chip:hover{filter:brightness(1.25);box-shadow:0 0 20px rgba(201,162,39,.3), 0 14px 40px rgba(0,0,0,.7)}
+.restore-chip:active{transform:translateX(-50%) translateY(2px)}
+
 /* ---------------- misc ---------------- */
 .fps-meter{
   position:fixed;top:8px;left:8px;z-index:30;padding:3px 8px;
