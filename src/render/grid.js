@@ -354,15 +354,19 @@ ${WAVE_GLSL}`)
 
   _buildFrame() {
     const half = this.S / 2;
-    const t = 1.05;          // boom thickness
-    const out = half + 2.2;  // frame sits just outside the play area
+    const t = 1.3;           // boom thickness
+    const out = half + 2.4;  // frame sits just outside the play area
     const frame = new THREE.Group();
 
-    const accent = new THREE.MeshStandardMaterial({
+    const accentSpec = {
       color: this.hex, roughness: 0.4, metalness: 0.35,
       emissive: this.hex, emissiveIntensity: 0.35,
-    });
-    this.accentMat = accent;
+    };
+    // Two copies: one rides the boom's wave shader, one stays undisplaced for
+    // parts that are positioned from JS.
+    const accent = new THREE.MeshStandardMaterial(accentSpec);
+    const accentPlain = new THREE.MeshStandardMaterial(accentSpec);
+    this.accentMats = [accent, accentPlain];
 
     /* Each side of the boom is ONE continuous beam, finely segmented along its
        length and bent by the same wave field the ocean uses. Displacing it in
@@ -399,7 +403,7 @@ ${WAVE_GLSL}`)
               const g = boltGeo.clone();
               g.translate(
                 along === 'x' ? u : sign * out + off,
-                0.26,
+                1.0,
                 along === 'x' ? sign * out + off : u,
               );
               parts.push(g);
@@ -412,16 +416,24 @@ ${WAVE_GLSL}`)
       return merged;
     };
 
+    // Lighter than the hull steel so the barrier reads against dark water.
     this.boomMat = FRAME_MAT.clone();
+    this.boomMat.color.setHex(0x6e7b88);
+    this.postMat = FRAME_MAT.clone();
+    this.postMat.color.setHex(0x6e7b88);
     this.boomBoltMat = BOLT_MAT.clone();
     for (const mat of [this.boomMat, accent, this.boomBoltMat]) {
       this._waveDisplace(mat);
     }
 
+    /* Freeboard matters more than it looks. The boom rides the water at its
+       own position, but the sea a couple of units either side can be most of
+       a metre higher, so a low barrier gets swallowed by its neighbouring
+       crests. Standing the deck well clear keeps the outline unbroken. */
     this.boomParts = [];
     for (const [geo, mat] of [
-      [beams(1.9, t, -0.35), this.boomMat],
-      [beams(0.2, t * 0.62, 0.72), accent],
+      [beams(2.7, t, 0.05), this.boomMat],
+      [beams(0.24, t * 0.66, 1.47), accent],
       [boltRing(), this.boomBoltMat],
     ]) {
       const mesh = new THREE.Mesh(geo, mat);
@@ -440,17 +452,20 @@ ${WAVE_GLSL}`)
     for (const sx of [1, -1]) {
       for (const sz of [1, -1]) {
         const post = new THREE.Group();
-        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.62, 2.6, 10), FRAME_MAT);
-        p.position.y = 0.6;
+        // Posts are placed on the swell from JS, so they must NOT use the
+        // boom material - its vertex shader would displace them a second time,
+        // and from the post's own local origin at that.
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.74, 4.2, 10), this.postMat);
+        p.position.y = 0.9;
         post.add(p);
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.1, 6, 14), accent);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.12, 6, 14), accentPlain);
         ring.rotation.x = Math.PI / 2;
-        ring.position.y = 1.5;
+        ring.position.y = 2.6;
         post.add(ring);
-        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), new THREE.MeshStandardMaterial({
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.34, 10, 8), new THREE.MeshStandardMaterial({
           color: this.hex, emissive: this.hex, emissiveIntensity: 2.2, roughness: 0.3,
         }));
-        lamp.position.y = 2.05;
+        lamp.position.y = 3.2;
         post.add(lamp);
         this.lamps.push(lamp);
         post.position.set(sx * out, 0, sz * out);
@@ -470,16 +485,18 @@ ${WAVE_GLSL}`)
   /* ---- edge labels ---- */
 
   _buildLabels() {
-    const css = '#' + new THREE.Color(this.hex).getHexString();
-    const half = this.S / 2;
+    // Plain white on both axes: the fleet colour already marks the board, and
+    // coloured coordinates are harder to read at a glance against the water.
     const g = new THREE.Group();
+    const y = 2.6;
+    const gap = CELL * 0.5 + 3.2;
     for (let i = 0; i < this.n; i++) {
-      const col = labelSprite(String.fromCharCode(65 + i), css);
-      col.position.set(this.localX(i), 1.5, this.localZ(0) - this.sign * (CELL * 0.5 + 2.6));
+      const col = labelSprite(String.fromCharCode(65 + i), '#ffffff');
+      col.position.set(this.localX(i), y, this.localZ(0) - this.sign * gap);
       g.add(col);
 
-      const row = labelSprite(String(i + 1), '#cfdae3');
-      row.position.set(this.localX(0) - (CELL * 0.5 + 2.6), 1.5, this.localZ(i));
+      const row = labelSprite(String(i + 1), '#ffffff');
+      row.position.set(this.localX(0) - gap, y, this.localZ(i));
       g.add(row);
     }
     this.labels = g;
@@ -512,7 +529,7 @@ ${WAVE_GLSL}`)
   setAccent(hex) {
     this.hex = hex;
     this.overlayMat.uniforms.uColor.value.setHex(hex);
-    if (this.accentMat) { this.accentMat.color.setHex(hex); this.accentMat.emissive.setHex(hex); }
+    for (const m of this.accentMats || []) { m.color.setHex(hex); m.emissive.setHex(hex); }
     for (const l of this.lamps) { l.material.color.setHex(hex); l.material.emissive.setHex(hex); }
   }
 

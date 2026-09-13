@@ -60,7 +60,7 @@ export class CameraRig extends EventTarget {
     // overview is aimed past the origin and sits high enough that the near
     // edge of your own grid still clears the bottom of the frame.
     this.presets = {
-      overview: { target: new THREE.Vector3(0, 0, -cz * 0.25), radius: S * 3.0 + 40, phi: 0.40, theta: 0 },
+      overview: { target: new THREE.Vector3(0, 0, -cz * 0.22), radius: S * 3.0 + 58, phi: 0.40, theta: 0 },
       own:      { target: new THREE.Vector3(0, 0, cz), radius: S * 1.15 + 16, phi: 0.66, theta: 0 },
       foe:      { target: new THREE.Vector3(0, 0, -cz), radius: S * 1.15 + 16, phi: 0.66, theta: 0 },
       place:    { target: new THREE.Vector3(0, 0, cz), radius: S * 1.1 + 14, phi: 0.46, theta: 0 },
