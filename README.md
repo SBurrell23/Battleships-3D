@@ -43,7 +43,7 @@ friend over peer-to-peer WebRTC. No accounts, no server, no build step.
   ship going under, bosun's calls and a brass victory fanfare
 - Riveted steel UI with hand-authored SVG iconography (no icon fonts, no emoji)
 - Esc settings: volumes, FPS cap, anti-aliasing, shadows, ocean detail,
-  particle density, render scale, camera shake, FPS counter
+  particle density, camera shake, FPS counter
 
 ## Difficulty
 

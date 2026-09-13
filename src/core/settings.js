@@ -13,7 +13,6 @@ export const DEFAULTS = {
   shadows: 2,      // 0 off | 1 low | 2 high
   water: 2,        // 1 low | 2 med | 3 high
   particles: 2,    // 1 low | 2 med | 3 high
-  renderScale: 100,
   shake: 1,
   fpsMeter: 0,
 
@@ -87,9 +86,10 @@ export const quality = {
   shadowsOn() { return settings.get('shadows') > 0; },
   waterSegments() { return [0, 180, 260, 360][settings.get('water')] || 260; },
   particleScale() { return [0, 0.5, 1, 1.7][settings.get('particles')] || 1; },
+  // Always render at the display's own resolution (capped at 2x so a 3x
+  // phone panel does not ask for nine times the pixels).
   pixelRatio() {
-    const cap = settings.get('renderScale') / 100;
-    return Math.min(window.devicePixelRatio || 1, 2) * cap;
+    return Math.min(window.devicePixelRatio || 1, 2);
   },
   frameInterval() {
     const f = settings.get('fpsLimit');

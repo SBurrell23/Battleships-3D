@@ -330,7 +330,6 @@ export class World {
 
     settings.onChange((k) => {
       if (k === 'antialias') this._buildRenderer();
-      if (k === 'renderScale') this.resize();
       if (k === 'shadows') this._applyShadowSettings();
       if (k === 'water') this._rebuildOcean();
     });

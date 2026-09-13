@@ -647,7 +647,6 @@ export class UI {
     slider('#s-master', 'master', '#o-master');
     slider('#s-music', 'music', '#o-music');
     slider('#s-sfx', 'sfx', '#o-sfx');
-    slider('#s-scale', 'renderScale', '#o-scale');
 
     this._seg('#s-blurmute', (v) => settings.set('blurMute', +v));
     this._seg('#s-fps', (v) => settings.set('fpsLimit', +v));
@@ -670,7 +669,6 @@ export class UI {
     set('#s-master', 'master', '#o-master');
     set('#s-music', 'music', '#o-music');
     set('#s-sfx', 'sfx', '#o-sfx');
-    set('#s-scale', 'renderScale', '#o-scale');
     this._setSeg('#s-blurmute', String(settings.get('blurMute')));
     this._setSeg('#s-fps', String(settings.get('fpsLimit')));
     this._setSeg('#s-aa', String(settings.get('antialias')));
