@@ -4,7 +4,7 @@ export const PROTOCOL_VERSION = 3;
 
 /* ---- world scale (three.js units) ---- */
 export const CELL = 4;            // one grid tile is 4x4 units
-export const STRAIT = 30;         // open water between the two grids
+export const STRAIT = 15;         // open water between the two grids
 export const SEA_LEVEL = 0;
 
 /** Distance from world origin to the centre of each grid. */

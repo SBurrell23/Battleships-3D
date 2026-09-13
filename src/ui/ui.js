@@ -633,7 +633,6 @@ export class UI {
     this._seg('#s-water', (v) => settings.set('water', +v));
     this._seg('#s-particles', (v) => settings.set('particles', +v));
     this._seg('#s-shake', (v) => settings.set('shake', +v));
-    this._seg('#s-zoom', (v) => settings.set('actionZoom', +v));
     this._seg('#s-fpsmeter', (v) => {
       settings.set('fpsMeter', +v);
       $('#fps-meter').hidden = !+v;
@@ -656,7 +655,6 @@ export class UI {
     this._setSeg('#s-water', String(settings.get('water')));
     this._setSeg('#s-particles', String(settings.get('particles')));
     this._setSeg('#s-shake', String(settings.get('shake')));
-    this._setSeg('#s-zoom', String(settings.get('actionZoom')));
     this._setSeg('#s-fpsmeter', String(settings.get('fpsMeter')));
     $('#fps-meter').hidden = !settings.get('fpsMeter');
   }

@@ -10,7 +10,7 @@ import { CameraRig } from './camera.js';
 import { FX } from './fx.js';
 import { BoardView } from './grid.js';
 import { buildShip, buildGhost } from './ships.js';
-import { CELL, boardCenterZ, COLOR_BY_ID } from '../core/constants.js';
+import { CELL, boardCenterZ, COLORS, COLOR_BY_ID } from '../core/constants.js';
 import { TILE, Board } from '../core/board.js';
 import { settings, quality } from '../core/settings.js';
 import { sfx, musicDuck } from '../core/audio.js';
@@ -296,7 +296,6 @@ export class Stage extends EventTarget {
     this.fx.muzzle(origin.clone().addScaledVector(dir, 2.2).setY(2.6), dir.clone().setY(0.35));
     sfx('fire');
     musicDuck(0.45, 1.6);
-    this.rig.punch(origin.clone().lerp(targetPos, 0.22), { hold: 0.34, strength: 0.55 });
 
     const flight = 1.05 + Math.random() * 0.12;
     await wait(150);
@@ -307,8 +306,6 @@ export class Stage extends EventTarget {
         duration: flight,
         onImpact: resolve,
       });
-      // Track the shell in for the last stretch of its arc.
-      setTimeout(() => this.rig.punch(targetPos, { hold: 1.5, strength: 1 }), flight * 620);
     });
 
     if (result.hit) {
@@ -336,7 +333,6 @@ export class Stage extends EventTarget {
         opts.sunkShip.gy + (opts.sunkShip.horizontal ? 0 : (opts.sunkShip.size - 1) / 2),
         0.6,
       );
-      this.rig.punch(centre, { hold: 2.4, strength: 1.15 });
       this.fx.sinkBurst(centre, opts.sunkShip.size * CELL * 0.5);
       sfx('sink');
       musicDuck(0.3, 3.2);
@@ -356,7 +352,6 @@ export class Stage extends EventTarget {
       await wait(360);
     }
 
-    this.rig.releasePunch();
   }
 
   /** Surface the enemy hulls that were never found, faded out. */
@@ -391,7 +386,11 @@ export class Stage extends EventTarget {
 
   showcase() {
     const n = 10;
-    this.setup(n, COLOR_BY_ID.blue.hex, COLOR_BY_ID.red.hex);
+    // The backdrop flies the colours you actually picked, not a fixed blue.
+    const mine = COLOR_BY_ID[settings.get('playerColor')] || COLOR_BY_ID.blue;
+    const theirs = COLORS.find((c) => c.id !== mine.id && ['red', 'orange', 'purple', 'green'].includes(c.id))
+      || COLORS.find((c) => c.id !== mine.id);
+    this.setup(n, mine.hex, theirs.hex);
     const fleet = { carrier: 1, battleship: 1, cruiser: 1, submarine: 1, destroyer: 1 };
     for (const side of ['own', 'foe']) {
       const b = new Board(n, fleet, { allowTouching: true });

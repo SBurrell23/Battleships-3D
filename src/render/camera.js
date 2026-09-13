@@ -36,8 +36,6 @@ export class CameraRig extends EventTarget {
     this.presets = {};
     this.setGrid(10);
 
-    this.focus = { pos: new THREE.Vector3(), w: 0, want: 0, hold: 0 };
-
     this.keys = new Set();
     this.pointer = new THREE.Vector2(-2, -2);
     this.pointerInside = false;
@@ -60,10 +58,13 @@ export class CameraRig extends EventTarget {
     // overview is aimed past the origin and sits high enough that the near
     // edge of your own grid still clears the bottom of the frame.
     this.presets = {
-      overview: { target: new THREE.Vector3(0, 0, -cz * 0.22), radius: S * 3.0 + 58, phi: 0.40, theta: 0 },
+      overview: { target: new THREE.Vector3(0, 0, -cz * 0.22), radius: S * 2.8 + 50, phi: 0.40, theta: 0 },
       own:      { target: new THREE.Vector3(0, 0, cz), radius: S * 1.15 + 16, phi: 0.66, theta: 0 },
       foe:      { target: new THREE.Vector3(0, 0, -cz), radius: S * 1.15 + 16, phi: 0.66, theta: 0 },
-      place:    { target: new THREE.Vector3(0, 0, cz), radius: S * 1.1 + 14, phi: 0.46, theta: 0 },
+      // The opening framing. Nothing moves the camera after this, so it has to
+      // show the whole theatre while still favouring your own waters, which is
+      // where the first thing you do - deploying - happens.
+      place:    { target: new THREE.Vector3(0, 0, cz * 0.55), radius: S * 2.2 + 40, phi: 0.50, theta: 0 },
     };
   }
 
@@ -112,21 +113,6 @@ export class CameraRig extends EventTarget {
     this.desiredTheta = 0.5;
     this.cinematic = true;
     this.mode = 'cinematic';
-  }
-
-  /* ---------------- action zoom ---------------- */
-
-  /** Push the framing toward a world point for a moment. */
-  punch(pos, { hold = 0.9, strength = 1 } = {}) {
-    if (!settings.get('actionZoom')) return;
-    this.focus.pos.copy(pos);
-    this.focus.want = strength;
-    this.focus.hold = hold;
-  }
-
-  releasePunch() {
-    this.focus.want = 0;
-    this.focus.hold = 0;
   }
 
   /* ---------------- input ---------------- */
@@ -239,6 +225,9 @@ export class CameraRig extends EventTarget {
     if (k.has('KeyQ')) fy -= 1;
     if (!fx && !fz && !fy) return;
 
+    // Flying is always available; taking the stick hands control back to you.
+    if (this.mode !== 'free') this.setMode('free');
+
     const boost = (k.has('ShiftLeft') || k.has('ShiftRight')) ? 2.6 : 1;
     const speed = (18 + this.radius * 0.28) * boost * dt;
     const fwd = new THREE.Vector3(-Math.sin(this.theta), 0, -Math.cos(this.theta));
@@ -252,20 +241,12 @@ export class CameraRig extends EventTarget {
   /* ---------------- frame ---------------- */
 
   update(dt, fx, time) {
-    if (this.mode === 'free') this._freeFly(dt);
+    this._freeFly(dt);
 
     if (this.cinematic) {
       this.desiredTheta += dt * 0.055;
       this.desiredPhi += Math.sin(time * 0.13) * dt * 0.02;
     }
-
-    // Action zoom rises fast and releases slowly.
-    if (this.focus.hold > 0) {
-      this.focus.hold -= dt;
-      if (this.focus.hold <= 0) this.focus.want = 0;
-    }
-    const fRate = this.focus.want > this.focus.w ? 5.5 : 1.8;
-    this.focus.w += (this.focus.want - this.focus.w) * (1 - Math.exp(-fRate * dt));
 
     const s = 1 - Math.exp(-this.snap * dt);
     this.target.lerp(this.desiredTarget, s);
@@ -277,10 +258,8 @@ export class CameraRig extends EventTarget {
   }
 
   _apply(shakeAmount, fx, time = 0) {
-    const w = this.focus.w;
     const t = this._tmp.copy(this.target);
-    if (w > 0.001) t.lerp(this.focus.pos, w * 0.62);
-    const r = this.radius * (1 - w * 0.34);
+    const r = this.radius;
 
     const sp = Math.sin(this.phi);
     const px = t.x + r * sp * Math.sin(this.theta);

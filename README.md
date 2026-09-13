@@ -31,8 +31,9 @@ friend over peer-to-peer WebRTC. No accounts, no server, no build step.
 - Lobby rules: grid size, fleet composition, turn timer, extra-shot-on-hit,
   whether hulls may touch
 - Six fleet colours, which tint your hulls, your boom, your grid and your ensign
-- Four camera modes — overview, your waters, enemy waters, free flight — plus
-  orbit, pan, zoom and an action camera that snaps to each impact
+- The camera is yours at all times: free flight with orbit, pan and zoom, and
+  four one-press framings (overview, your waters, enemy waters, free). Nothing
+  ever repositions it for you mid-match
 
 **Presentation**
 - Every sound effect is synthesised at runtime with the Web Audio API: main
@@ -40,7 +41,7 @@ friend over peer-to-peer WebRTC. No accounts, no server, no build step.
   ship going under, bosun's calls and a brass victory fanfare
 - Riveted steel UI with hand-authored SVG iconography (no icon fonts, no emoji)
 - Esc settings: volumes, FPS cap, anti-aliasing, shadows, ocean detail,
-  particle density, render scale, camera shake, action zoom, FPS counter
+  particle density, render scale, camera shake, FPS counter
 
 ## Difficulty
 
@@ -114,7 +115,7 @@ src/render/
   grid.js               battle grids, booms, markers, hull wrecks
   ships.js              procedural warship models
   fx.js                 shells, splashes, explosions, smoke, fire, shake
-  camera.js             camera rig, presets, free flight, action zoom
+  camera.js             camera rig, presets, free flight, pointer input
   stage.js              frame loop, raycasting, shot choreography
 src/ui/
   icons.js              hand-authored SVG icon set

@@ -15,7 +15,6 @@ export const DEFAULTS = {
   particles: 2,    // 1 low | 2 med | 3 high
   renderScale: 100,
   shake: 1,
-  actionZoom: 1,
   fpsMeter: 0,
 
   playerName: '',

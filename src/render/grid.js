@@ -63,7 +63,8 @@ void main() {
   vec3 col = uColor;
   // A faint wash inside the boom separates the arena from open sea. Keep it
   // very low or the overlay reads as a solid pane hovering over the water.
-  float a = 0.045 + line * 0.42 + border * 0.9;
+  // The lattice itself is drawn strongly so the fleet colour is unmistakable.
+  float a = 0.045 + line * 0.66 + border * 0.9;
 
   // miss: cool pale wash with a ring
   float r = length(f - 0.5);
@@ -323,30 +324,34 @@ export class BoardView {
    */
   _waveDisplace(mat) {
     const u = this.boomUniforms;
-    const offsetZ = boardCenterZ(this.n) * this.sign;
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = u.uTime;
       shader.uniforms.uChop = u.uChop;
+      shader.uniforms.uBoardZ = u.uBoardZ;
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', `#include <common>
 uniform float uTime;
 uniform float uChop;
+uniform float uBoardZ;
 ${WAVE_GLSL}`)
         .replace('#include <begin_vertex>', `#include <begin_vertex>
 {
-  vec2 wxz = vec2(transformed.x, transformed.z + ${offsetZ.toFixed(3)});
+  vec2 wxz = vec2(transformed.x, transformed.z + uBoardZ);
   float wh; vec2 wdh;
   waveField(wxz, uTime, uChop, wh, wdh);
   transformed.y += wh;
 }`)
         .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
 {
-  vec2 nxz = vec2(position.x, position.z + ${offsetZ.toFixed(3)});
+  vec2 nxz = vec2(position.x, position.z + uBoardZ);
   float nh; vec2 ndh;
   waveField(nxz, uTime, uChop, nh, ndh);
   objectNormal = normalize(objectNormal + vec3(-ndh.x, 0.0, -ndh.y) * max(objectNormal.y, 0.0));
 }`);
     };
+    // The board offset MUST be a uniform, not baked into the source: both
+    // boards share this cache key, so three compiles the shader once and the
+    // second board would otherwise inherit the first board's patch of sea.
     mat.customProgramCacheKey = () => 'bs3d-boom-wave';
   }
 
@@ -372,7 +377,11 @@ ${WAVE_GLSL}`)
        length and bent by the same wave field the ocean uses. Displacing it in
        the vertex shader keeps it a single unbroken line that ripples with the
        swell, rather than a row of separate floats bobbing out of step. */
-    this.boomUniforms = { uTime: { value: 0 }, uChop: { value: 1 } };
+    this.boomUniforms = {
+      uTime: { value: 0 },
+      uChop: { value: 1 },
+      uBoardZ: { value: boardCenterZ(this.n) * this.sign },
+    };
 
     const span = out * 2 + t;
     const segs = Math.max(24, Math.ceil(span / 1.1));

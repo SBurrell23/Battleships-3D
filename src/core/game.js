@@ -84,7 +84,9 @@ export class Match extends EventTarget {
 
   begin() {
     this.stage.setup(this.config.gridSize, this.myHex, this.foeHex);
+    // One initial framing, then the camera is the player's for good.
     this.stage.rig.snapTo('place');
+    this.stage.rig.setMode('free');
     this.setPhase(PHASE.PLACE);
     this.stage.setInteract('place');
     this.selectFirstUnplaced();
@@ -222,7 +224,6 @@ export class Match extends EventTarget {
   startBattle(mineFirst) {
     this.stats.started = Date.now();
     this.setPhase(PHASE.BATTLE);
-    this.stage.rig.goTo(mineFirst ? 'foe' : 'own');
     this.emit('banner', { text: 'ENGAGE' });
     sfx('connect');
     this.log('Battle stations. Guns free.', 'sys');
@@ -237,7 +238,6 @@ export class Match extends EventTarget {
     this.emit('turn', { mine });
     if (mine) {
       sfx('yourTurn');
-      if (!first) this.stage.rig.goTo('foe');
     } else if (this.mode === 'ai') {
       this._queueAIShot();
     }
@@ -424,7 +424,6 @@ export class Match extends EventTarget {
     musicDuck(0.25, 4);
     sfx(won ? 'victory' : 'defeat', { delay: 0.35 });
     this.emit('banner', { text: won ? 'VICTORY' : 'DEFEAT' });
-    this.stage.rig.goTo('overview');
     this.emit('over', { won, stats: this.summary(won) });
   }
 

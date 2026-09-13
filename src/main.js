@@ -385,7 +385,7 @@ function startMatch(firstTurnIsMine) {
   app.ui.setCombatants(app.me, m.foe);
   app.ui.setStatus(m.statusSnapshot());
   app.ui.showHud('place');
-  app.ui.setCamMode('own');
+  app.ui.setCamMode('free');
   m.begin();
   startMusic();
 }
