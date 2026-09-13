@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>BATTLESHIPS 3D</title>
+<meta name="description" content="Classic Battleship reimagined as a single 3D naval theatre. Peer-to-peer or versus AI." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Saira+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="stylesheet" href="src/styles.css" />
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="booting">
+
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<!-- ============================ BOOT ============================ -->
+<div id="boot" class="boot">
+  <div class="boot-inner">
+    <div class="boot-mark" data-icon="crest"></div>
+    <div class="boot-title">BATTLESHIPS<span>3D</span></div>
+    <div class="boot-bar"><i></i></div>
+    <div class="boot-status" id="boot-status">SPOOLING TURBINES</div>
+  </div>
+</div>
+
+<!-- ============================ TITLE ============================ -->
+<section id="screen-title" class="screen center-stack" hidden>
+  <div class="title-block">
+    <div class="title-crest" data-icon="crest"></div>
+    <h1 class="game-title">BATTLESHIPS<em>3D</em></h1>
+    <div class="title-rule"><span></span><b data-icon="star"></b><span></span></div>
+    <p class="title-sub">NORTH ATLANTIC THEATRE &middot; FLEET COMMAND</p>
+  </div>
+  <nav class="menu-stack">
+    <button class="steel-btn primary" data-nav="ai"><i data-icon="target"></i><span>SINGLE COMBAT</span><small>VS ADMIRALTY A.I.</small></button>
+    <button class="steel-btn" data-nav="host"><i data-icon="tower"></i><span>HOST ENGAGEMENT</span><small>CREATE A PRIVATE LINK</small></button>
+    <button class="steel-btn" data-nav="join"><i data-icon="link"></i><span>JOIN ENGAGEMENT</span><small>ENTER A BATTLE CODE</small></button>
+    <div class="menu-row">
+      <button class="steel-btn slim" data-nav="settings"><i data-icon="gear"></i><span>SETTINGS</span></button>
+      <button class="steel-btn slim" data-nav="help"><i data-icon="book"></i><span>BRIEFING</span></button>
+    </div>
+  </nav>
+  <div class="title-foot">
+    <span class="stencil">HULL NO. 003</span>
+    <span class="stencil">PRESS <b>ESC</b> ANY TIME FOR SETTINGS</span>
+  </div>
+</section>
+
+<!-- ============================ LOBBY ============================ -->
+<section id="screen-lobby" class="screen center-stack" hidden>
+  <div class="panel plate wide">
+    <header class="panel-head">
+      <i data-icon="anchor"></i>
+      <h2 id="lobby-title">ENGAGEMENT SETUP</h2>
+      <button class="icon-btn" data-nav="title" title="Back to port"><i data-icon="back"></i></button>
+    </header>
+
+    <div class="lobby-grid">
+      <div class="lobby-col">
+        <div class="sub-head"><i data-icon="link"></i><span>LINK</span></div>
+
+        <div id="lobby-host-box" class="link-box" hidden>
+          <label class="field-label">YOUR BATTLE CODE</label>
+          <div class="code-row">
+            <output id="host-code" class="code-out">--------</output>
+            <button id="btn-copy-code" class="steel-btn tiny" title="Copy code"><i data-icon="copy"></i></button>
+          </div>
+          <label class="field-label">DIRECT INVITE LINK</label>
+          <div class="code-row">
+            <output id="host-link" class="code-out small">&mdash;</output>
+            <button id="btn-copy-link" class="steel-btn tiny" title="Copy link"><i data-icon="copy"></i></button>
+          </div>
+          <p class="hint">Send either one to your opponent. Keep this page open.</p>
+        </div>
+
+        <div id="lobby-join-box" class="link-box" hidden>
+          <label class="field-label">BATTLE CODE</label>
+          <div class="code-row">
+            <input id="join-code" class="steel-input" maxlength="14" placeholder="XXXXXXXX" autocomplete="off" spellcheck="false" />
+            <button id="btn-connect" class="steel-btn tiny wide-tiny"><i data-icon="link"></i><span>LINK UP</span></button>
+          </div>
+          <p class="hint">Ask the host for their code, or open their invite link.</p>
+        </div>
+
+        <div id="lobby-ai-box" class="link-box" hidden>
+          <label class="field-label">A.I. DIFFICULTY</label>
+          <div class="seg" id="ai-difficulty" data-value="medium">
+            <button data-val="easy">ENSIGN</button>
+            <button data-val="medium" class="on">COMMANDER</button>
+            <button data-val="hard">ADMIRAL</button>
+          </div>
+          <p class="hint" id="ai-diff-hint">Fires at random, then works outward from any strike.</p>
+        </div>
+
+        <div class="sub-head"><i data-icon="flag"></i><span>COLOURS</span></div>
+        <label class="field-label">CALLSIGN</label>
+        <input id="player-name" class="steel-input full" maxlength="14" placeholder="ADMIRAL" autocomplete="off" />
+        <label class="field-label">FLEET COLOUR</label>
+        <div class="swatches" id="color-picker"></div>
+
+        <div class="sub-head"><i data-icon="users"></i><span>ROSTER</span></div>
+        <ul class="roster" id="roster"></ul>
+      </div>
+
+      <div class="lobby-col">
+        <div class="sub-head"><i data-icon="rules"></i><span>RULES OF ENGAGEMENT</span><b id="rules-lock" class="lock-tag" hidden>HOST CONTROLLED</b></div>
+
+        <div class="opt-row">
+          <label>GRID SIZE</label>
+          <div class="seg" id="opt-grid" data-value="10">
+            <button data-val="8">8 &times; 8</button>
+            <button data-val="10" class="on">10 &times; 10</button>
+            <button data-val="12">12 &times; 12</button>
+          </div>
+        </div>
+
+        <div class="opt-row">
+          <label>TURN TIMER</label>
+          <div class="seg" id="opt-timer" data-value="30">
+            <button data-val="0">NONE</button>
+            <button data-val="15">15s</button>
+            <button data-val="30" class="on">30s</button>
+            <button data-val="60">60s</button>
+          </div>
+        </div>
+
+        <div class="opt-row">
+          <label>HIT GRANTS EXTRA SHOT</label>
+          <div class="seg" id="opt-extra" data-value="0">
+            <button data-val="0" class="on">NO</button>
+            <button data-val="1">YES</button>
+          </div>
+        </div>
+
+        <div class="opt-row">
+          <label>HULLS MAY TOUCH</label>
+          <div class="seg" id="opt-touch" data-value="1">
+            <button data-val="0">NO</button>
+            <button data-val="1" class="on">YES</button>
+          </div>
+        </div>
+
+        <div class="sub-head"><i data-icon="ship"></i><span>FLEET COMPOSITION</span></div>
+        <div class="fleet-editor" id="fleet-editor"></div>
+        <div class="fleet-summary"><span id="fleet-count">0 HULLS</span><span id="fleet-tiles">0 TILES</span><span id="fleet-density">0%</span></div>
+        <p class="hint" id="fleet-warn"></p>
+      </div>
+    </div>
+
+    <footer class="panel-foot">
+      <div class="status-line" id="lobby-status">STANDING BY</div>
+      <button id="btn-launch" class="steel-btn primary" disabled><i data-icon="anchor"></i><span>DEPLOY FLEET</span></button>
+    </footer>
+  </div>
+</section>
+
+<!-- ============================ PLACEMENT HUD ============================ -->
+<section id="hud-place" class="hud" hidden>
+  <div class="hud-top">
+    <div class="plate-strip">
+      <i data-icon="anchor"></i>
+      <span class="strip-title">DEPLOYMENT</span>
+      <span class="strip-sub" id="place-progress">0 / 0 HULLS ANCHORED</span>
+    </div>
+  </div>
+
+  <aside class="tray plate">
+    <div class="tray-head"><i data-icon="ship"></i><span>FLEET REGISTRY</span></div>
+    <ul class="tray-list" id="tray-list"></ul>
+    <div class="tray-actions">
+      <button class="steel-btn tiny" id="btn-rotate"><i data-icon="rotate"></i><span>ROTATE <b>R</b></span></button>
+      <button class="steel-btn tiny" id="btn-random"><i data-icon="dice"></i><span>AUTO</span></button>
+      <button class="steel-btn tiny" id="btn-clear"><i data-icon="trash"></i><span>CLEAR</span></button>
+    </div>
+    <button class="steel-btn primary full-btn" id="btn-ready" disabled><i data-icon="check"></i><span>READY FOR ACTION</span></button>
+    <div class="tray-note" id="place-note">Select a hull, aim at your waters, click to anchor.</div>
+  </aside>
+</section>
+
+<!-- ============================ BATTLE HUD ============================ -->
+<section id="hud-battle" class="hud" hidden>
+  <div class="hud-top">
+    <div class="score-plate" id="plate-you">
+      <span class="flagchip" id="you-flag"></span>
+      <div class="score-body">
+        <div class="score-name" id="you-name">YOU</div>
+        <div class="pip-row" id="you-pips"></div>
+      </div>
+    </div>
+
+    <div class="turn-core">
+      <div class="turn-label" id="turn-label">STAND BY</div>
+      <div class="timer-shell"><i id="timer-fill"></i><span id="timer-text"></span></div>
+    </div>
+
+    <div class="score-plate right" id="plate-foe">
+      <div class="score-body">
+        <div class="score-name" id="foe-name">ENEMY</div>
+        <div class="pip-row" id="foe-pips"></div>
+      </div>
+      <span class="flagchip" id="foe-flag"></span>
+    </div>
+  </div>
+
+  <div class="cam-bar plate">
+    <button class="cam-btn on" data-cam="overview" title="Overview (1)"><i data-icon="eye"></i><b>1</b></button>
+    <button class="cam-btn" data-cam="own" title="My waters (2)"><i data-icon="anchor"></i><b>2</b></button>
+    <button class="cam-btn" data-cam="foe" title="Enemy waters (3)"><i data-icon="target"></i><b>3</b></button>
+    <button class="cam-btn" data-cam="free" title="Free cam (4)"><i data-icon="freecam"></i><b>4</b></button>
+  </div>
+
+  <div class="log plate" id="log"></div>
+
+  <div class="fire-prompt" id="fire-prompt" hidden><i data-icon="target"></i><span>SELECT A TARGET IN ENEMY WATERS</span></div>
+  <div class="toast-wrap" id="toast-wrap"></div>
+</section>
+
+<!-- ============================ GAME OVER ============================ -->
+<section id="screen-over" class="screen center-stack" hidden>
+  <div class="panel plate narrow result-panel">
+    <div class="result-crest" id="result-crest" data-icon="crest"></div>
+    <h2 class="result-title" id="result-title">VICTORY</h2>
+    <p class="result-sub" id="result-sub">ENEMY FLEET SENT TO THE DEEP</p>
+    <div class="result-stats" id="result-stats"></div>
+    <div class="result-actions">
+      <button class="steel-btn primary" id="btn-rematch"><i data-icon="rotate"></i><span>REMATCH</span></button>
+      <button class="steel-btn" data-nav="title"><i data-icon="back"></i><span>RETURN TO PORT</span></button>
+    </div>
+    <div class="result-wait" id="result-wait" hidden>AWAITING OPPONENT&hellip;</div>
+  </div>
+</section>
+
+<!-- ============================ SETTINGS ============================ -->
+<div id="overlay-settings" class="overlay" hidden>
+  <div class="panel plate wide settings-panel">
+    <header class="panel-head">
+      <i data-icon="gear"></i>
+      <h2>SETTINGS</h2>
+      <button class="icon-btn" id="btn-close-settings" title="Close"><i data-icon="close"></i></button>
+    </header>
+
+    <div class="tabs" id="settings-tabs">
+      <button class="on" data-tab="audio"><i data-icon="speaker"></i><span>AUDIO</span></button>
+      <button data-tab="video"><i data-icon="display"></i><span>GRAPHICS</span></button>
+      <button data-tab="controls"><i data-icon="hand"></i><span>CONTROLS</span></button>
+    </div>
+
+    <div class="tab-body" data-tab="audio">
+      <div class="opt-row"><label>MASTER VOLUME</label><div class="slider-wrap"><input type="range" id="s-master" min="0" max="100" step="1" /><output id="o-master">80</output></div></div>
+      <div class="opt-row"><label>MUSIC VOLUME</label><div class="slider-wrap"><input type="range" id="s-music" min="0" max="100" step="1" /><output id="o-music">55</output></div></div>
+      <div class="opt-row"><label>EFFECTS VOLUME</label><div class="slider-wrap"><input type="range" id="s-sfx" min="0" max="100" step="1" /><output id="o-sfx">85</output></div></div>
+      <div class="opt-row"><label>MUTE WHEN UNFOCUSED</label><div class="seg" id="s-blurmute" data-value="1"><button data-val="0">OFF</button><button data-val="1" class="on">ON</button></div></div>
+      <div class="opt-row"><label>NOW PLAYING</label><div class="np" id="now-playing">NAVAL SILENCE &mdash; LOOPING</div></div>
+    </div>
+
+    <div class="tab-body" data-tab="video" hidden>
+      <div class="opt-row"><label>FPS LIMIT</label><div class="seg" id="s-fps" data-value="60"><button data-val="30">30</button><button data-val="60" class="on">60</button><button data-val="120">120</button><button data-val="144">144</button><button data-val="0">MAX</button></div></div>
+      <div class="opt-row"><label>ANTI-ALIASING</label><div class="seg" id="s-aa" data-value="1"><button data-val="0">OFF</button><button data-val="1" class="on">ON</button></div></div>
+      <div class="opt-row"><label>SHADOWS</label><div class="seg" id="s-shadow" data-value="2"><button data-val="0">OFF</button><button data-val="1">LOW</button><button data-val="2" class="on">HIGH</button></div></div>
+      <div class="opt-row"><label>OCEAN DETAIL</label><div class="seg" id="s-water" data-value="2"><button data-val="1">LOW</button><button data-val="2" class="on">MED</button><button data-val="3">HIGH</button></div></div>
+      <div class="opt-row"><label>PARTICLE DENSITY</label><div class="seg" id="s-particles" data-value="2"><button data-val="1">LOW</button><button data-val="2" class="on">MED</button><button data-val="3">HIGH</button></div></div>
+      <div class="opt-row"><label>RENDER SCALE</label><div class="slider-wrap"><input type="range" id="s-scale" min="50" max="100" step="5" /><output id="o-scale">100</output></div></div>
+      <div class="opt-row"><label>CAMERA SHAKE</label><div class="seg" id="s-shake" data-value="1"><button data-val="0">OFF</button><button data-val="1" class="on">ON</button></div></div>
+      <div class="opt-row"><label>ACTION ZOOM</label><div class="seg" id="s-zoom" data-value="1"><button data-val="0">OFF</button><button data-val="1" class="on">ON</button></div></div>
+      <div class="opt-row"><label>FPS COUNTER</label><div class="seg" id="s-fpsmeter" data-value="0"><button data-val="0" class="on">OFF</button><button data-val="1">ON</button></div></div>
+    </div>
+
+    <div class="tab-body" data-tab="controls" hidden>
+      <ul class="keylist" id="keylist"></ul>
+    </div>
+
+    <footer class="panel-foot">
+      <button class="steel-btn slim" id="btn-reset-settings"><i data-icon="rotate"></i><span>RESTORE DEFAULTS</span></button>
+      <div class="foot-spacer"></div>
+      <button class="steel-btn slim danger" id="btn-abandon" hidden><i data-icon="flag"></i><span>ABANDON BATTLE</span></button>
+      <button class="steel-btn primary" id="btn-resume"><i data-icon="check"></i><span>RESUME</span></button>
+    </footer>
+  </div>
+</div>
+
+<!-- ============================ HELP ============================ -->
+<div id="overlay-help" class="overlay" hidden>
+  <div class="panel plate wide">
+    <header class="panel-head">
+      <i data-icon="book"></i>
+      <h2>COMBAT BRIEFING</h2>
+      <button class="icon-btn" id="btn-close-help" title="Close"><i data-icon="close"></i></button>
+    </header>
+    <div class="brief-grid">
+      <div class="brief-card"><i data-icon="ship"></i><h3>DEPLOY</h3><p>Anchor every hull inside your own waters. Pick a hull from the registry, aim, press <b>R</b> to swing it broadside, then click to set. Click an anchored hull to lift it again.</p></div>
+      <div class="brief-card"><i data-icon="target"></i><h3>ENGAGE</h3><p>On your turn, click any unfired tile in enemy waters. A shell arcs over the strait. A water plume means a miss; fire and debris means you struck steel.</p></div>
+      <div class="brief-card"><i data-icon="eye"></i><h3>OBSERVE</h3><p>Keys <b>1-4</b> swap between overview, your waters, enemy waters and free cam. Drag to orbit, wheel to zoom, right-drag to pan. In free cam use <b>WASD</b> and <b>Q/E</b>.</p></div>
+      <div class="brief-card"><i data-icon="flag"></i><h3>WIN</h3><p>Sink every enemy hull before yours goes down. A sunk hull is revealed burning on the water, so you always know what is still out there.</p></div>
+    </div>
+    <div class="brief-note plate-inset">
+      <b>MULTIPLAYER:</b> connections are direct peer-to-peer. The host shares a battle code or invite link, the challenger links up, and the host sets the rules of engagement. No account, no server, no spectators.
+    </div>
+  </div>
+</div>
+
+<!-- ============================ MISC ============================ -->
+<div id="fps-meter" class="fps-meter" hidden>00</div>
+<div id="net-badge" class="net-badge" hidden><i data-icon="link"></i><span>P2P</span><b id="net-ping">--</b></div>
+<div id="banner" class="banner" hidden><div class="banner-inner"><span id="banner-text"></span></div></div>
+<div id="fatal" class="fatal" hidden><div class="panel plate narrow"><h2 id="fatal-title">SIGNAL LOST</h2><p id="fatal-msg"></p><button class="steel-btn primary" data-nav="title"><span>RETURN TO PORT</span></button></div></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
