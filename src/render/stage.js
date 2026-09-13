@@ -156,11 +156,13 @@ export class Stage extends EventTarget {
       if (this.hover) {
         for (const b of Object.values(this.boards)) if (b) b.setHover(null);
         this.hover = null;
+        if (this.ghost) this.ghost.visible = false;
         this.dispatchEvent(new CustomEvent('hover', { detail: null }));
       }
       return;
     }
     const cell = this._raycastBoard(ndc);
+    if (!cell && this.ghost) this.ghost.visible = false;
     const same = cell && this.hover && cell.gx === this.hover.gx && cell.gy === this.hover.gy && cell.side === this.hover.side;
     if (same) {
       if (this.interact === 'place' && this.ghost) this._positionGhost(cell);
