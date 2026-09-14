@@ -446,7 +446,18 @@ export class Match extends EventTarget {
   }
 
   statusSnapshot() {
-    return { mine: this.myBoard.status(), foe: this.foeTracking.status() };
+    // The tally is fair game either way: the fleet composition was agreed in
+    // the lobby and the struck tiles are sitting on the board as red pegs.
+    const total = this.roster.reduce((s, r) => s + r.size, 0);
+    return {
+      mine: this.myBoard.status(),
+      foe: this.foeTracking.status(),
+      tally: {
+        mine: this.myBoard.hitCount(),
+        foe: this.foeTracking.hitCount(),
+        total,
+      },
+    };
   }
 
   /* =====================================================

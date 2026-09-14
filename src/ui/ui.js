@@ -473,23 +473,34 @@ export class UI {
   }
 
   setStatus(snapshot) {
-    this._renderPips('#you-pips', snapshot.mine);
-    this._renderPips('#foe-pips', snapshot.foe);
+    // Your own damage is shown hull by hull. The enemy's is not: their pips
+    // stay intact until a hull actually sinks, because knowing which ship a
+    // hit landed on would give away its length.
+    this._renderPips('#you-pips', snapshot.mine, true);
+    this._renderPips('#foe-pips', snapshot.foe, false);
+    const t = snapshot.tally;
+    if (t) {
+      $('#you-tally').textContent = `${t.mine} / ${t.total} TILES STRUCK`;
+      $('#foe-tally').textContent = `${t.foe} / ${t.total} TILES STRUCK`;
+    }
   }
 
-  _renderPips(sel, list) {
+  _renderPips(sel, list, revealDamage) {
     const wrap = $(sel);
-    const sig = list.map((s) => `${s.hits}/${s.size}${s.sunk ? 'x' : ''}`).join('|');
+    const sig = list.map((s) => `${revealDamage ? s.hits : 0}/${s.size}${s.sunk ? 'x' : ''}`).join('|');
     if (wrap.dataset.sig === sig) return;
     wrap.dataset.sig = sig;
     wrap.innerHTML = '';
     for (const s of list) {
       const p = document.createElement('span');
       p.className = `pip${s.sunk ? ' sunk' : ''}`;
-      p.title = `${s.name} (${s.hits}/${s.size})`;
+      p.title = revealDamage
+        ? `${s.name} (${s.hits}/${s.size})`
+        : `${s.name} (${s.size}) - ${s.sunk ? 'SUNK' : 'AFLOAT'}`;
+      const lit = s.sunk ? s.size : (revealDamage ? s.hits : 0);
       for (let i = 0; i < s.size; i++) {
         const i2 = document.createElement('i');
-        if (i < s.hits) i2.className = 'hit';
+        if (i < lit) i2.className = 'hit';
         p.append(i2);
       }
       wrap.append(p);

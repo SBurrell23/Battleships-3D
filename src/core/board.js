@@ -173,7 +173,11 @@ export class Board {
     if (sunk) ship.sunk = true;
     return {
       valid: true, gx, gy, hit: true, sunk,
-      ship: sunk ? serializeShip(ship) : { uid: ship.uid, classId: ship.classId, name: ship.name, size: ship.size },
+      // A hit that does not finish a hull reveals nothing about which hull it
+      // was. Naming the ship here would hand the attacker its length from a
+      // single shot, which is exactly what the screens in the board game are
+      // there to prevent. Identity travels only with the sinking.
+      ship: sunk ? serializeShip(ship) : null,
       defeated: this.allSunk(),
     };
   }
@@ -191,6 +195,13 @@ export class Board {
   /** Compact snapshot used for end-of-match reveal / verification. */
   serialize() {
     return [...this.ships.values()].map(serializeShip);
+  }
+
+  /** Tiles of our own hull struck so far. */
+  hitCount() {
+    let n = 0;
+    for (const s of this.ships.values()) n += s.hits.size;
+    return n;
   }
 
   /** Fleet status used by the HUD pip rows. */
@@ -242,14 +253,22 @@ export class TrackingGrid {
   apply(result) {
     if (!result.valid) return;
     this.shots[result.gy][result.gx] = result.hit ? TILE.HIT : TILE.MISS;
-    if (result.hit && result.ship) {
+    // Hits are only ever attributed to a hull once that hull goes down. Until
+    // then all we know is that a tile of *something* was struck.
+    if (result.hit && result.sunk && result.ship) {
       const entry = this.roster.find((r) => r.uid === result.ship.uid);
-      if (entry) {
-        entry.hits = Math.min(entry.size, entry.hits + 1);
-        if (result.sunk) { entry.sunk = true; entry.hits = entry.size; }
-      }
-      if (result.sunk && result.ship.gx !== undefined) this.sunkShips.push(result.ship);
+      if (entry) { entry.sunk = true; entry.hits = entry.size; }
+      if (result.ship.gx !== undefined) this.sunkShips.push(result.ship);
     }
+  }
+
+  /** Tiles of enemy hull struck so far - the count of red pegs on the board. */
+  hitCount() {
+    let n = 0;
+    for (let y = 0; y < this.size; y++) {
+      for (let x = 0; x < this.size; x++) if (this.shots[y][x] === TILE.HIT) n++;
+    }
+    return n;
   }
 
   status() {

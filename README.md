@@ -93,9 +93,13 @@ the challenger dials it.
 Each side keeps its own fleet privately and acts as referee for shots fired at
 it. The attacker sends `fire {x, y}`; the defender resolves it against its own
 board and answers with `result {hit, sunk, ship, defeated}`. Neither side ever
-receives the other's layout until the match ends, and enemy salvoes are always
-launched from a randomly chosen tile of the enemy grid so the firing animation
-cannot leak where their ships actually are.
+receives the other's layout until the match ends.
+
+Two details keep that honest. A hit that does not finish a hull answers with
+`ship: null`, so a single shot cannot tell the attacker which ship it struck or
+how long that ship is — identity travels only with the sinking. And enemy
+salvoes are always launched from a randomly chosen tile of the enemy grid, so
+the firing animation cannot leak where their ships actually are.
 
 ## Layout
 
